@@ -11,7 +11,7 @@
 
 """
 
-import logging as logger
+import logging
 
 __author__     = "Veronica Berglyd Olsen"
 __copyright__  = "Copyright 2017, Veronica Berglyd Olsen"
@@ -26,7 +26,8 @@ __status__     = "Development"
 logging.basicConfig(
     format  = "[%(asctime)s] [%(name)15s:%(lineno)-4d] %(levelname)-8s: %(message)s",
     level   = logging.DEBUG,
-    datefmt = "%Y-%m-%d %H:%M:%S",
+#   datefmt = "%Y-%m-%d %H:%M:%S",
+    datefmt = "%H:%M:%S",
 )
 
 if __name__ == '__main__':

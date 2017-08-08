@@ -1,180 +1,213 @@
-import numpy as np
+# -*- coding: utf-8 -*
+"""TFS File Parser
+
+  Mad-X Tools - TFS File Parser
+ ===============================
+  Parses TFS files and converts them to Numpy arrays
+  By: Veronica Berglyd Olsen
+      CERN (BE-ABP-HSS)
+      Geneva, Switzerland
+
+  Based on Kyrre Ness Sjøbæk's class TwissTable.py
+  https://github.com/kyrsjo/MadxTools
+
+  Updated to work with Python3
+
+"""
+
+import logging
+import numpy   as np
 import re
 
-def stripQuotes(inStr):
-    outStr = inStr
-    if inStr[0]=='"' and inStr[-1]=='"':
-        outStr = inStr[1:-1]
-    return outStr
+logger = logging.getLogger(__name__)
 
-class TwissTable:
-    tfsName = None
-    metadata = None
-    variableNames = None
-    variableTypes  = None
-    data = None
 
-    N = None
+def stripQuotes(sVar):
+    if (sVar[0] == sVar[-1]) and sVar.startswith(("'", '"')):
+        return sVar[1:-1]
+    return sVar
 
-    def __init__(self,tfsName):
+class TableFS:
+    
+    fileName  = None
+    metaData  = None
+    varNames  = None
+    varTypes  = None
+    Data      = None
 
-        self.metadata = {}
-        self.variableNames = []
-        self.variableTypes  = []
-        self.data = {}
+    nLines    = None
+    sliceElem = None
+
+    def __init__(self, fileName):
+
+        self.fileName = fileName
+        self.metaData = {}
+        self.varNames = []
+        self.varTypes = []
+        self.Data     = {}
         
-        self.N = 0
+        self.nLines   = 0
 
-        #Read the file
-        self.tfsName = tfsName
-        tfsFile = open(tfsName,'r')
-        for line in tfsFile.xreadlines():
-            #print line
-            if line[0]=="@":
-                #Metadata
-                ls = line.split()[1:]
-                if ls[1][-1]=="d":
-                    self.metadata[ls[0]] = int(ls[2])
-                elif ls[1][-1]=="e":
-                    self.metadata[ls[0]] = float(ls[2])
-                elif ls[1][-1]=="s":
-                    self.metadata[ls[0]] = stripQuotes(ls[2])
+        # Read File
+        with open(fileName,'r') as tfsFile:
+
+            for tfsLine in tfsFile:
+
+                # Metadata
+                if tfsLine[0] == "@":
+                    spLines = tfsLine.split()[1:]
+                    if   spLines[1][-1] == "d":
+                        self.metaData[spLines[0]] = int(spLines[2])
+                    elif spLines[1][-1] == "e":
+                        self.metaData[spLines[0]] = float(spLines[2])
+                    elif spLines[1][-1] == "s":
+                        self.metaData[spLines[0]] = stripQuotes(spLines[2])
+                    else:
+                        logger.error("Unknown type '%s' for metadata variable '%s'" % (spLines[1], spLines[2]))
+                        return False
+
+                # Header/Variable Names
+                elif tfsLine[0] == "*":
+                    spLines = tfsLine.split()[1:]
+                    for spLine in spLines:
+                        self.varNames.append(spLine)
+                        self.Data[spLine] = []
+
+                # Header/Variable Type
+                elif tfsLine[0] == "$":
+                    spLines = tfsLine.split()[1:]
+                    for spLine in spLines:
+                        self.varTypes.append(spLine)
+
+                # Data
                 else:
-                    print "Unknown type '"+ls[1]+"' for metadata variable '"+ls[2]+"'"
-                    exit(1)
+                    spLines = tfsLine.split()
+                    assert len(spLines) == len(self.varNames)
+                    for (spLine,vN,vT) in zip(spLines,self.varNames,self.varTypes):
+                        self.Data[vN].append(spLine)
+                        if vT == "%s":
+                            self.Data[vN][-1] = stripQuotes(self.Data[vN][-1])
+                    self.nLines += 1
 
-            elif line[0]=="*":
-                #Header/variable names
-                ls = line.split()[1:]
-                for l in ls:
-                    self.variableNames.append(l)
-                    self.data[l]=[]
-            elif line[0]=="$":
-                #Header/variable types
-                ls = line.split()[1:]
-                for l in ls:
-                    self.variableTypes.append(l)
-            else:
-                #Data
-                ls = line.split()
-                assert len(ls) == len(self.variableNames)
-                for (l,vn,vt) in zip(ls,self.variableNames,self.variableTypes):
-                    self.data[vn].append(l)
-                    if vt=="%s":
-                        self.data[vn][-1]=stripQuotes(self.data[vn][-1])
-                self.N += 1
-                #break
-        tfsFile.close()
-        
-        assert self.N==len(self.data["NAME"])
-        
-        #print self.metadata
-        #print self.variableNames
-        #print self.variableTypes
-        #print
-        #print self.data
+            logger.info("%d lines of data read." % self.nLines)
+
+        assert self.nLines == len(self.Data["NAME"])
+
+        return
 
     def convertToNumpy(self):
-        "Convert data to NumPy arrays"
-        for i in xrange(len(self.variableNames)):
-            vn = self.variableNames[i]
-            vt = self.variableTypes[i]
+        """
+        Convert data to NumPy arrays
+        """
+
+        for i in range(len(self.varNames)):
+
+            vN = self.varNames[i]
+            vT = self.varTypes[i]
             
-            if vt[-1]=="d":
-                #print vn,vt,"int"
-                self.data[vn] = np.asarray(self.data[vn],dtype="int")
-            elif vt[-1]=="e":
-                #print vn,vt,"float"
-                self.data[vn] = np.asarray(self.data[vn],dtype="float")
-            elif vt[-1]=="s":
-                #print vn,vt,"string"
-                self.data[vn] = np.asarray(self.data[vn],dtype="str")
+            if   vT[-1] == "d":
+                self.Data[vN] = np.asarray(self.Data[vN],dtype="int")
+            elif vT[-1] == "e":
+                self.Data[vN] = np.asarray(self.Data[vN],dtype="float")
+            elif vT[-1] == "s":
+                self.Data[vN] = np.asarray(self.Data[vN],dtype="str")
             else:
-                print "Unknown type '"+vt+"' for variable '"+vn+"'"
-                exit(1)
+                logger.error("Unknown type '%s' for variable '%s'" % (vT, vN))
+                return False
+
+        return True
         
-        
-    
-    elements = None
-    def sliced_rebuild(self,maxSearch=None):
-        "Rebuild sliced elements."
-        print "TwissTable::sliced_rebuild()..."
+    def slicedRebuild(self, maxSearch=None):
+        """
+        Rebuild sliced elements
+        """
+
+        logger.info("Rebuilding sliced elements.")
+
         currElementName  = None
         currElementStart = None
         currElementEnd   = None
-        self.elements = {}
-        for i in xrange(self.N):
-            #look for sliced element
-            name1 = self.data["NAME"][i]
-            ns1 = name1.split("..")
+        self.sliceElem   = {}
+
+        for i in range(self.nLines):
+
+            # Look for sliced element
+
+            name1 = self.Data["NAME"][i]
+            ns1   = name1.split("..")
+
             if len(ns1) == 2:
                 if not ns1[0] in self.elements:
-                    #print "Searching for", ns1[0],i
-
                     idx = int(ns1[1])
-                    #assert idx == 1, "Error in Slice_Rebuild"
                     if idx != 1:
-                        print "Warning in TwissTable::sliced_rebuild()"
-                        print "\t Starting in the middle of a sliced element"
-                        print "\t Element name = '"+ns1[0]+"'"
-                        print "\t First idx =", idx
+                        logger.warn("Starting in the middle of a sliced element\t Element name = '%s'\t First idx = %d" % (ns1[0], idx))
 
-                    sMin = float(self.data["S"][i])
-                    sMax = float(self.data["S"][i])
-                    maxj = self.N
+                    sMin = float(self.Data["S"][i])
+                    sMax = float(self.Data["S"][i])
+                    maxJ = self.nLines
+
                     if maxSearch != None:
-                        maxj = min(self.N,i+1+maxSearch)
-                    for j in xrange(i+1, maxj):
-                        name2 = self.data["NAME"][j]
-                        ns2 = name2.split("..")
+                        maxJ = min(self.nLines,i+1+maxSearch)
+
+                    for j in range(i+1, maxJ):
+                        name2 = self.Data["NAME"][j]
+                        ns2   = name2.split("..")
                         if len(ns2)==2:
                             if ns2[0] == ns1[0]:
-                                #print "\t sub", ns2[0],j
                                 idx += 1
                                 assert idx == int(ns2[1])
-                                sMax = float(self.data["S"][j])
-                    #print ns1[0],sMin,sMax
-                    self.elements[ns1[0]] = (sMin,sMax)
+                                sMax = float(self.Data["S"][j])
+
+                    self.sliceElem[ns1[0]] = (sMin,sMax)
+
+        return True
     
-    def shift(self,newFirst):
-        """"
+    def shiftSeq(self,newFirst):
+        """
         Shift the sequence such that the element newFirst is the first in the sequence.
         """
         
-        #Find the index of the first element:
+        # Find the index of the first element:
         idx = -1
-        for (i,name) in zip(xrange(self.N),self.data["NAME"]):
+        for (i,name) in zip(range(self.nLines),self.Data["NAME"]):
             if name == newFirst:
                 idx = i
                 break
         if idx==-1:
-            print "SHIFT("+self.tfsName+"): No element named '"+newFirst+"' found"
-            exit(1)
+            logger.warn("No element named '%s' found" % newFirst)
+            return False
         
-        #Shift all the data arrays
-        for d in self.data:
-            self.data[d] = np.roll(self.data[d],-idx)
+        # Shift all the data arrays
+        for d in self.Data:
+            self.Data[d] = np.roll(self.Data[d],-idx)
         
-        #Rezero S
-        s0 = self.data["S"][0]
-        L  = self.metadata["LENGTH"]
-        for i in xrange(self.N):
-            self.data["S"][i] -= s0
-            if self.data["S"][i] < 0:
-                self.data["S"][i] += self.metadata["LENGTH"]
-        if self.data["S"][-1] == 0.0:
-            print "Warning in TwissTable::shift()"
-            print "\t Shifting last element from 0.0 to", self.metadata["LENGTH"]
-            self.data["S"][-1] = self.metadata["LENGTH"]
+        # Rezero S
+        s0 = self.Data["S"][0]
+        L  = self.metaData["LENGTH"]
 
-        #Kill "elements" array which is no longer valid
-        self.elements = None
+        for i in range(self.nLines):
+            self.Data["S"][i] -= s0
+            if self.Data["S"][i] < 0:
+                self.Data["S"][i] += self.metaData["LENGTH"]
+
+        if self.Data["S"][-1] == 0.0:
+            logger.warn("Shifting last element from 0.0 to %d" % self.metaData["LENGTH"])
+            self.Data["S"][-1] = self.metaData["LENGTH"]
+
+        # Kill elements array which is no longer valid
+        self.sliceElem = None
+
+        return True
 
     def findDataIndex(self,columnName,pattern):
-        ret = []
-        for i in xrange(self.N):
-        #for i in xrange(5):
-            #print pattern, self.data[columnName][i]
-            if re.match(pattern,self.data[columnName][i]):
-                ret.append(i)
-        return ret
+
+        retVal = []
+
+        for i in range(self.nLines):
+            if re.match(pattern,self.Data[columnName][i]):
+                retVal.append(i)
+
+        return retVal
+
+## End Class TableFS
+
