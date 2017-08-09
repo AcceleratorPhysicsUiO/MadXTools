@@ -22,11 +22,6 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def stripQuotes(sVar):
-    if (sVar[0] == sVar[-1]) and sVar.startswith(("'", '"')):
-        return sVar[1:-1]
-    return sVar
-
 class TableFS:
     
     fileName  = None
@@ -61,7 +56,7 @@ class TableFS:
                     elif spLines[1][-1] == "e":
                         self.metaData[spLines[0]] = float(spLines[2])
                     elif spLines[1][-1] == "s":
-                        self.metaData[spLines[0]] = stripQuotes(spLines[2])
+                        self.metaData[spLines[0]] = self.stripQuotes(spLines[2])
                     else:
                         logger.error("Unknown type '%s' for metadata variable '%s'" % (spLines[1], spLines[2]))
                         return False
@@ -86,14 +81,15 @@ class TableFS:
                     for (spLine,vN,vT) in zip(spLines,self.varNames,self.varTypes):
                         self.Data[vN].append(spLine)
                         if vT == "%s":
-                            self.Data[vN][-1] = stripQuotes(self.Data[vN][-1])
+                            self.Data[vN][-1] = self.stripQuotes(self.Data[vN][-1])
                     self.nLines += 1
 
-            logger.info("%d lines of data read." % self.nLines)
+            logger.info("%d lines of data read" % self.nLines)
 
         assert self.nLines == len(self.Data["NAME"])
 
         return
+
 
     def convertToNumpy(self):
         """
@@ -116,7 +112,8 @@ class TableFS:
                 return False
 
         return True
-        
+
+
     def slicedRebuild(self, maxSearch=None):
         """
         Rebuild sliced elements
@@ -161,8 +158,9 @@ class TableFS:
                     self.sliceElem[ns1[0]] = (sMin,sMax)
 
         return True
-    
-    def shiftSeq(self,newFirst):
+
+
+    def shiftSeq(self, newFirst):
         """
         Shift the sequence such that the element newFirst is the first in the sequence.
         """
@@ -199,15 +197,32 @@ class TableFS:
 
         return True
 
-    def findDataIndex(self,columnName,pattern):
+
+    def findDataIndex(self, columnName, searchPattern):
+        """
+        Search a data column for a specific pattern
+        """
 
         retVal = []
 
         for i in range(self.nLines):
-            if re.match(pattern,self.Data[columnName][i]):
+            if re.match(searchPattern,self.Data[columnName][i]):
                 retVal.append(i)
 
         return retVal
+
+
+    #
+    # Internal Functions
+    #
+
+    def stripQuotes(self, sVar):
+
+        if (sVar[0] == sVar[-1]) and sVar.startswith(("'", '"')):
+            return sVar[1:-1]
+
+        return sVar
+    
 
 ## End Class TableFS
 
