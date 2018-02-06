@@ -13,6 +13,14 @@
 
 import logging
 
+# Submodules
+from .tablefs import TableFS
+
+logger = logging.getLogger(__name__)
+
+__all__ = ["TableFS"]
+
+# Package Meta
 __author__     = "Veronica Berglyd Olsen"
 __copyright__  = "Copyright 2017, Veronica Berglyd Olsen"
 __credits__    = ["Veronica Berglyd Olsen"]
@@ -23,12 +31,20 @@ __maintainer__ = "Veronica Berglyd Olsen"
 __email__      = "v.k.b.olsen@cern.ch"
 __status__     = "Development"
 
-logging.basicConfig(
-    format  = "[%(asctime)s] [%(name)20s:%(lineno)-4d] %(levelname) :: %(message)s",
-    level   = logging.DEBUG,
-#   datefmt = "%Y-%m-%d %H:%M:%S",
-    datefmt = "%H:%M:%S",
-)
+logLevel = logging.INFO
+
+if logLevel == logging.DEBUG:
+    logging.basicConfig(
+        format  = "[%(asctime)s] %(name)s:%(lineno)d %(levelname)s: %(message)s",
+        level   = logging.DEBUG,
+        datefmt = "%Y-%m-%d %H:%M:%S",
+    )
+else:
+    logging.basicConfig(
+        format  = "%(levelname)s: %(message)s",
+        level   = logLevel,
+        datefmt = "%H:%M:%S",
+    )
 
 if __name__ == '__main__':
     print("Mad-X Tools")
