@@ -48,13 +48,13 @@ class TableFS:
                 for tfsLine in tfsFile:
                     # Metadata
                     if tfsLine[0] == "@":
-                        spLines = tfsLine.split()[1:]
-                        if spLines[1][-1] == "d":
+                        spLines = tfsLine.lstrip().split(None, maxsplit=3)[1:]
+                        if spLines[1].endswith("d"):
                             self.metaData[spLines[0]] = int(spLines[2])
-                        elif spLines[1][-1] == "e":
+                        elif spLines[1].endswith("le"):
                             self.metaData[spLines[0]] = float(spLines[2])
-                        elif spLines[1][-1] == "s":
-                            self.metaData[spLines[0]] = self._stripQuotes(spLines[2])
+                        elif spLines[1].endswith("s"):
+                            self.metaData[spLines[0]] = self._stripQuotes(spLines[2].strip())
                         else:
                             logger.error(
                                 "Unknown type '%s' for metadata variable '%s'" % (
