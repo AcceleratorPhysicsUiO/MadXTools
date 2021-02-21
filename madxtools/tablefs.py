@@ -153,7 +153,7 @@ class TableFS:
         if not self.hasNAME:
             raise TypeError("This TFS table is not indexed by NAME")
 
-        if not isinstance(self.Data["S"][0], np.float):
+        if not isinstance(self.Data["S"][0], float):
             raise ValueError("S column is not a number. Please run convertToNumpy().")
 
         # Find the index of the first element:

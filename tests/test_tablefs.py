@@ -29,7 +29,7 @@ from dummy import causeOSError
 from madxtools import TableFS
 
 @pytest.mark.tfs
-def testTFS_FileError(monkeypatch, caplog, filesDir):
+def testTFS_FileError(monkeypatch, filesDir):
     """Check files reading error handling.
     """
     testFile = os.path.join(filesDir, "fodothin_90.tfs")
@@ -41,7 +41,7 @@ def testTFS_FileError(monkeypatch, caplog, filesDir):
 # END Test testTFS_FileError
 
 @pytest.mark.tfs
-def testTFS_LatticeFile(caplog, filesDir):
+def testTFS_LatticeFile(filesDir):
     """Check the reading of a lattice files.
     """
     testFile = os.path.join(filesDir, "fodothin_90.tfs")
@@ -106,7 +106,7 @@ def testTFS_LatticeFile(caplog, filesDir):
 # END Test testTFS_LatticeFile
 
 @pytest.mark.tfs
-def testTFS_TrackFile(caplog, filesDir):
+def testTFS_TrackFile(filesDir):
     """Check the reading of a track files.
     """
     testFile = os.path.join(filesDir, "fodothintrack_90.tfs.obs0001.p0001")
@@ -158,7 +158,7 @@ def testTFS_TrackFile(caplog, filesDir):
 # END Test testTFS_TrackFile
 
 @pytest.mark.tfs
-def testTFS_LatticeSearch(caplog, filesDir):
+def testTFS_LatticeSearch(filesDir):
     """Check searching a lattice files.
     """
     testFile = os.path.join(filesDir, "fodothin_90.tfs")
