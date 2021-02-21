@@ -30,74 +30,68 @@ logger = logging.getLogger(__name__)
 
 class TableFS:
 
-    fileName  = None
-    metaData  = None
-    varNames  = None
-    varTypes  = None
-    Data      = None
-
-    nLines    = None
-    sliceElem = None
-
-    hasNAME   = None
-
     def __init__(self, fileName):
 
-        self.fileName = fileName
-        self.metaData = {}
-        self.varNames = []
-        self.varTypes = []
-        self.Data     = {}
-
-        self.nLines   = 0
-        self.hasNAME  = None
+        self.fileName  = fileName
+        self.metaData  = {}
+        self.varNames  = []
+        self.varTypes  = []
+        self.Data      = {}
+        self.nLines    = 0
+        self.sliceElem = {}
+        self.hasNAME   = None
 
         # Read File
-        with open(fileName, "r") as tfsFile:
+        try:
+            with open(fileName, "r") as tfsFile:
 
-            for tfsLine in tfsFile:
-
-                # Metadata
-                if tfsLine[0] == "@":
-                    spLines = tfsLine.split()[1:]
-                    if spLines[1][-1] == "d":
-                        self.metaData[spLines[0]] = int(spLines[2])
-                    elif spLines[1][-1] == "e":
-                        self.metaData[spLines[0]] = float(spLines[2])
-                    elif spLines[1][-1] == "s":
-                        self.metaData[spLines[0]] = self._stripQuotes(spLines[2])
-                    else:
-                        logger.error(
-                            "Unknown type '%s' for metadata variable '%s'" % (
-                                spLines[1], spLines[2]
+                for tfsLine in tfsFile:
+                    # Metadata
+                    if tfsLine[0] == "@":
+                        spLines = tfsLine.split()[1:]
+                        if spLines[1][-1] == "d":
+                            self.metaData[spLines[0]] = int(spLines[2])
+                        elif spLines[1][-1] == "e":
+                            self.metaData[spLines[0]] = float(spLines[2])
+                        elif spLines[1][-1] == "s":
+                            self.metaData[spLines[0]] = self._stripQuotes(spLines[2])
+                        else:
+                            logger.error(
+                                "Unknown type '%s' for metadata variable '%s'" % (
+                                    spLines[1], spLines[2]
+                                )
                             )
-                        )
-                        return False
+                            return False
 
-                # Header/Variable Names
-                elif tfsLine[0] == "*":
-                    spLines = tfsLine.split()[1:]
-                    for spLine in spLines:
-                        self.varNames.append(spLine)
-                        self.Data[spLine] = []
+                    # Header/Variable Names
+                    elif tfsLine[0] == "*":
+                        spLines = tfsLine.split()[1:]
+                        for spLine in spLines:
+                            self.varNames.append(spLine)
+                            self.Data[spLine] = []
 
-                # Header/Variable Type
-                elif tfsLine[0] == "$":
-                    spLines = tfsLine.split()[1:]
-                    for spLine in spLines:
-                        self.varTypes.append(spLine)
+                    # Header/Variable Type
+                    elif tfsLine[0] == "$":
+                        spLines = tfsLine.split()[1:]
+                        for spLine in spLines:
+                            self.varTypes.append(spLine)
 
-                # Data
-                else:
-                    spLines = tfsLine.split()
-                    assert len(spLines) == len(self.varNames)
-                    for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
-                        self.Data[vN].append(spLine)
-                        if vT == "%s":
-                            self.Data[vN][-1] = self._stripQuotes(self.Data[vN][-1])
-                    self.nLines += 1
+                    # Data
+                    else:
+                        spLines = tfsLine.split()
+                        assert len(spLines) == len(self.varNames)
+                        for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
+                            self.Data[vN].append(spLine)
+                            if vT == "%s":
+                                self.Data[vN][-1] = self._stripQuotes(self.Data[vN][-1])
+                        self.nLines += 1
 
-            logger.info("%d lines of data read" % self.nLines)
+                logger.info("%d lines of data read" % self.nLines)
+
+        except Exception as e:
+            logger.error("Could not read file %s" % fileName)
+            logger.error(str(e))
+            return
 
         if "NAME" in self.Data.keys():
             dataLines = len(self.Data["NAME"])
