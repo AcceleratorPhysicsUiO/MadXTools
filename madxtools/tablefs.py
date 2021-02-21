@@ -39,7 +39,7 @@ class TableFS:
         self.Data      = {}
         self.nLines    = 0
         self.sliceElem = {}
-        self.hasNAME   = None
+        self.hasNAME   = False
 
         if fileName is not None:
             self.readFile()
@@ -55,7 +55,7 @@ class TableFS:
         self.Data      = {}
         self.nLines    = 0
         self.sliceElem = {}
-        self.hasNAME   = None
+        self.hasNAME   = False
 
         return
 
@@ -123,10 +123,10 @@ class TableFS:
 
         if "NAME" in self.Data:
             dataLines = len(self.Data["NAME"])
-            self.hasNAME = False
+            self.hasNAME = True
         else:
             dataLines = len(self.Data[next(iter(self.Data.keys()), None)])
-            self.hasNAME = True
+            self.hasNAME = False
 
         if self.nLines != dataLines:
             logger.warning("Mismatch between lines read (%d) and lines stored (%d)" % (
@@ -161,6 +161,9 @@ class TableFS:
         """
         if not self.hasNAME:
             raise TypeError("This TFS table is not indexed by NAME")
+
+        if not isinstance(self.Data["S"][0], np.float):
+            raise ValueError("S column is not a number. Please run convertToNumpy().")
 
         # Find the index of the first element:
         idx = -1

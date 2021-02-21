@@ -59,6 +59,7 @@ def testTFS_LatticeFile(caplog, filesDir):
         "DUMMY_INT": 42,
         "ENERGY": 7000.0,
         "GAMMA": 7460.52,
+        "LENGTH": 106.9,
         "MASS": 0.9382,
         "NAME": "TWISS",
         "ORIGIN": "Linux 64",
@@ -157,3 +158,64 @@ def testTFS_TrackFile(caplog, filesDir):
     assert isinstance(tfsObj.Data["E"][0], numpy.float)
 
 # END Test testTFS_TrackFile
+
+@pytest.mark.tfs
+def testTFS_LatticeSearch(caplog, filesDir):
+    """Check searching a lattice files.
+    """
+    testFile = os.path.join(filesDir, "fodothin_90.tfs")
+
+    tfsObj = TableFS()
+    assert tfsObj.fileName is None
+
+    assert tfsObj.readFile(testFile)
+    assert tfsObj.fileName == testFile
+
+    # No result
+    assert tfsObj.findDataIndex("NAME", "STUFF") == []
+
+    # All quadrupoles
+    assert tfsObj.findDataIndex("NAME", "^Q.*") == [1, 3, 5]
+    assert tfsObj.Data["NAME"][1] == "Q1F"
+    assert tfsObj.Data["NAME"][3] == "Q2D"
+    assert tfsObj.Data["NAME"][5] == "Q3F"
+
+# END Test testTFS_LatticeSearch
+
+@pytest.mark.tfs
+def testTFS_ShiftSequence(caplog, filesDir):
+    """Rotate the elements in the lattice
+    """
+    # This file can not be shifted
+    testFile = os.path.join(filesDir, "fodothintrack_90.tfs.obs0001.p0001")
+    tfsObj = TableFS(testFile)
+    with pytest.raises(TypeError):
+        assert tfsObj.shiftSeq("DRIFT_0")
+
+    # This file can
+    testFile = os.path.join(filesDir, "fodothin_90.tfs")
+    tfsObj = TableFS(testFile)
+    assert tfsObj.Data["NAME"] == [
+        "FODOTHIN$START", "Q1F", "DRIFT_0", "Q2D", "DRIFT_1", "Q3F", "FODOTHIN$END"
+    ]
+
+    # S column data type
+    with pytest.raises(ValueError):
+        assert tfsObj.shiftSeq("DRIFT_0")
+    assert tfsObj.convertToNumpy()
+
+    # Invalid name
+    assert not tfsObj.shiftSeq("STUFF")
+    assert list(tfsObj.Data["NAME"]) == [
+        "FODOTHIN$START", "Q1F", "DRIFT_0", "Q2D", "DRIFT_1", "Q3F", "FODOTHIN$END"
+    ]
+    assert list(tfsObj.Data["S"]) == [0.0, 0.0, 53.45, 53.45, 106.9, 106.9, 106.9]
+
+    # Valid shift
+    assert tfsObj.shiftSeq("Q2D")
+    assert list(tfsObj.Data["NAME"]) == [
+        "Q2D", "DRIFT_1", "Q3F", "FODOTHIN$END", "FODOTHIN$START", "Q1F", "DRIFT_0"
+    ]
+    assert list(tfsObj.Data["S"]) == [0.0, 53.45, 53.45, 53.45, 53.45, 53.45, 106.9]
+
+# END Test testTFS_LatticeSearch

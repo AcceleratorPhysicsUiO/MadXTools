@@ -7,6 +7,7 @@
 @ ENERGY           %le          7000
 @ PC               %le       6999.99
 @ GAMMA            %le       7460.52
+@ LENGTH           %le         106.9
 @ DUMMY_INT        %d             42
 @ TITLE            %08s "no-title"
 @ ORIGIN           %08s "Linux 64"
