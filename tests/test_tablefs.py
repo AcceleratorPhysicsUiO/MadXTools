@@ -47,7 +47,10 @@ def testTFS_LatticeFile(caplog, filesDir):
     """
     testFile = os.path.join(filesDir, "fodothin_90.tfs")
 
-    tfsObj = TableFS(testFile)
+    tfsObj = TableFS()
+    assert tfsObj.fileName is None
+
+    assert tfsObj.readFile(testFile)
     assert tfsObj.fileName == testFile
     assert tfsObj.metaData == {
         "CHARGE": 1.0,

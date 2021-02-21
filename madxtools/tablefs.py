@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class TableFS:
 
-    def __init__(self, fileName):
+    def __init__(self, fileName=None):
 
         self.fileName  = fileName
         self.metaData  = {}
@@ -41,9 +41,35 @@ class TableFS:
         self.sliceElem = {}
         self.hasNAME   = None
 
-        # Read File
+        if fileName is not None:
+            self.readFile()
+
+        return
+
+    def clearData(self):
+        """Clear the data arrays.
+        """
+        self.metaData  = {}
+        self.varNames  = []
+        self.varTypes  = []
+        self.Data      = {}
+        self.nLines    = 0
+        self.sliceElem = {}
+        self.hasNAME   = None
+
+        return
+
+    def readFile(self, fileName=None):
+        """Parse a file and save the data in the data arrays. If a file
+        name is not specified, the one specified in the contructor will
+        be used instead.
+        """
+        if fileName is not None:
+            self.fileName = fileName
+
+        self.clearData()
         try:
-            with open(fileName, "r") as tfsFile:
+            with open(self.fileName, "r") as tfsFile:
 
                 for tfsLine in tfsFile:
                     # Metadata
@@ -56,12 +82,11 @@ class TableFS:
                         elif spLines[1].endswith("s"):
                             self.metaData[spLines[0]] = self._stripQuotes(spLines[2].strip())
                         else:
-                            logger.error(
+                            logger.warning(
                                 "Unknown type '%s' for metadata variable '%s'" % (
-                                    spLines[1], spLines[2]
+                                    spLines[1], spLines[2].strip()
                                 )
                             )
-                            return False
 
                     # Header/Variable Names
                     elif tfsLine[0] == "*":
@@ -79,7 +104,10 @@ class TableFS:
                     # Data
                     else:
                         spLines = tfsLine.split()
-                        assert len(spLines) == len(self.varNames)
+                        if len(spLines) != len(self.varNames):
+                            logger.error("Mismatch between data lines and varaible names")
+                            return False
+
                         for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
                             self.Data[vN].append(spLine)
                             if vT == "%s":
@@ -89,20 +117,23 @@ class TableFS:
                 logger.info("%d lines of data read" % self.nLines)
 
         except Exception as e:
-            logger.error("Could not read file %s" % fileName)
+            logger.error("Could not read file %s" % self.fileName)
             logger.error(str(e))
-            return
+            return False
 
-        if "NAME" in self.Data.keys():
+        if "NAME" in self.Data:
             dataLines = len(self.Data["NAME"])
             self.hasNAME = False
         else:
             dataLines = len(self.Data[next(iter(self.Data.keys()), None)])
             self.hasNAME = True
 
-        assert self.nLines == dataLines
+        if self.nLines != dataLines:
+            logger.warning("Mismatch between lines read (%d) and lines stored (%d)" % (
+                self.nLines, dataLines
+            ))
 
-        return
+        return True
 
     def convertToNumpy(self):
         """Convert data to NumPy arrays

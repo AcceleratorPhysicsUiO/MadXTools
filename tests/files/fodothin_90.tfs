@@ -12,6 +12,7 @@
 @ ORIGIN           %08s "Linux 64"
 @ DATE             %08s "20/02/21"
 @ TIME             %08s "12.34.56"
+@ INVALID          %abc "This entry will be ignored"
 * NAME               KEYWORD                             S                  L               BETX               ALFX                MUX               BETY               ALFY                MUY 
 $ %s                 %s                                %le                %le                %le                %le                %le                %le                %le                %le 
  "FODOTHIN$START"    "MARKER"                             0                  0        182.0922015    1.292443919e-16                  0        31.72019423   -1.517971046e-16                  0
