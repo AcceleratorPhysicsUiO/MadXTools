@@ -179,7 +179,7 @@ class TableFS:
                 self.Data["S"][i] += self.metaData["LENGTH"]
 
         if self.Data["S"][-1] == 0.0:
-            logger.warnning("Shifting last element from 0.0 to %d" % self.metaData["LENGTH"])
+            logger.warning("Shifting last element from 0.0 to %d" % self.metaData["LENGTH"])
             self.Data["S"][-1] = self.metaData["LENGTH"]
 
         # Kill elements array which is no longer valid
