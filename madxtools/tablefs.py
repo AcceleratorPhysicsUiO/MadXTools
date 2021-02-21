@@ -103,8 +103,7 @@ class TableFS:
                 else:
                     spLines = tfsLine.split()
                     if len(spLines) != len(self.varNames):
-                        logger.error("Mismatch between data lines and varaible names")
-                        return False
+                        raise IndexError("Mismatch between data lines and variable names")
 
                     for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
                         self.Data[vN].append(spLine)
@@ -126,7 +125,7 @@ class TableFS:
                 self.nLines, dataLines
             ))
 
-        return True
+        return
 
     def convertToNumpy(self):
         """Convert data to NumPy arrays

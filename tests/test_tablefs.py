@@ -49,7 +49,7 @@ def testTFS_LatticeFile(caplog, filesDir):
     tfsObj = TableFS()
     assert tfsObj.fileName is None
 
-    assert tfsObj.readFile(testFile)
+    tfsObj.readFile(testFile)
     assert tfsObj.fileName == testFile
     assert tfsObj.metaData == {
         "CHARGE": 1.0,
@@ -114,7 +114,7 @@ def testTFS_TrackFile(caplog, filesDir):
     tfsObj = TableFS()
     assert tfsObj.fileName is None
 
-    assert tfsObj.readFile(testFile)
+    tfsObj.readFile(testFile)
     assert tfsObj.fileName == testFile
     assert tfsObj.metaData == {
         "DATE": "20/02/21",
@@ -166,7 +166,7 @@ def testTFS_LatticeSearch(caplog, filesDir):
     tfsObj = TableFS()
     assert tfsObj.fileName is None
 
-    assert tfsObj.readFile(testFile)
+    tfsObj.readFile(testFile)
     assert tfsObj.fileName == testFile
 
     # No result
