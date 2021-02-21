@@ -5,7 +5,7 @@ MadXTools : Package Init
 Python Toolbox for Mad-X
 
 This file is a part of MadXTools
-Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, Univesity of Oslo
+Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, University of Oslo
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ __all__ = ["TableFS"]
 
 # Package Meta
 __author__     = "Veronica Berglyd Olsen"
-__copyright__  = "Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, Univesity of Oslo"
+__copyright__  = "Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, University of Oslo"
 __license__    = "GPLv3"
 __version__    = "0.1.0"
 __date__       = "2021"
