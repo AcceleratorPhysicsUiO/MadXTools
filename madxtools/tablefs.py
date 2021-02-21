@@ -32,6 +32,8 @@ class TableFS:
     nLines    = None
     sliceElem = None
     
+    hasNAME   = None
+    
     def __init__(self, fileName):
         
         self.fileName = fileName
@@ -41,6 +43,8 @@ class TableFS:
         self.Data     = {}
         
         self.nLines   = 0
+        
+        self.hasNAME = None
         
         # Read File
         with open(fileName,'r') as tfsFile:
@@ -85,7 +89,14 @@ class TableFS:
                 
             logger.info("%d lines of data read" % self.nLines)
             
-        assert self.nLines == len(self.Data["NAME"])
+        if "NAME" in self.Data.keys():
+            dataLines = len(self.Data["NAME"])
+            self.hasNAME = False
+        else:
+            dataLines = len(self.Data[next(iter(self.Data.keys()),None)])
+            self.hasNAME = True
+            
+        assert self.nLines == dataLines
         
         return
         
@@ -116,6 +127,9 @@ class TableFS:
         """
         Rebuild sliced elements
         """
+        
+        if not self.hasNAME:
+            raise TypeError("This TFS table is not indexed by NAME")
         
         logger.info("Rebuilding sliced elements.")
         
@@ -161,6 +175,9 @@ class TableFS:
         """
         Shift the sequence such that the element newFirst is the first in the sequence.
         """
+        
+        if not self.hasNAME:
+            raise TypeError("This TFS table is not indexed by NAME")
         
         # Find the index of the first element:
         idx = -1
