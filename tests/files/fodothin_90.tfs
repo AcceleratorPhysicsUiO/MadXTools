@@ -1,0 +1,25 @@
+@ NAME             %05s "TWISS"
+@ TYPE             %05s "TWISS"
+@ SEQUENCE         %08s "FODOTHIN"
+@ PARTICLE         %06s "PROTON"
+@ MASS             %le        0.9382
+@ CHARGE           %le             1
+@ ENERGY           %le          7000
+@ PC               %le       6999.99
+@ GAMMA            %le       7460.52
+@ LENGTH           %le         106.9
+@ DUMMY_INT        %d             42
+@ TITLE            %08s "no-title"
+@ ORIGIN           %08s "Linux 64"
+@ DATE             %08s "20/02/21"
+@ TIME             %08s "12.34.56"
+@ INVALID          %abc "This entry will be ignored"
+* NAME               KEYWORD                             S                  L               BETX               ALFX                MUX               BETY               ALFY                MUY 
+$ %s                 %s                                %le                %le                %le                %le                %le                %le                %le                %le 
+ "FODOTHIN$START"    "MARKER"                             0                  0        182.0922015    1.292443919e-16                  0        31.72019423   -1.517971046e-16                  0
+ "Q1F"               "MULTIPOLE"                          0                  0        182.0922015         2.39595002                  0        31.72019423      -0.4173709768                  0
+ "DRIFT_0"           "DRIFT"                          53.45              53.45        31.72019423       0.4173709768       0.1241431066        182.0922015        -2.39595002       0.1241431066
+ "Q2D"               "MULTIPOLE"                      53.45                  0        31.72019423      -0.4173709768       0.1241431066        182.0922015         2.39595002       0.1241431066
+ "DRIFT_1"           "DRIFT"                          106.9              53.45        182.0922015        -2.39595002       0.2482862131        31.72019423       0.4173709768       0.2482862131
+ "Q3F"               "MULTIPOLE"                      106.9                  0        182.0922015                 -0       0.2482862131        31.72019423    3.330669074e-16       0.2482862131
+ "FODOTHIN$END"      "MARKER"                         106.9                  0        182.0922015                 -0       0.2482862131        31.72019423    3.330669074e-16       0.2482862131

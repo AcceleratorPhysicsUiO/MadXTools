@@ -30,49 +30,61 @@ logger = logging.getLogger(__name__)
 
 class TableFS:
 
-    fileName  = None
-    metaData  = None
-    varNames  = None
-    varTypes  = None
-    Data      = None
+    def __init__(self, fileName=None):
 
-    nLines    = None
-    sliceElem = None
+        self.fileName  = fileName
+        self.metaData  = {}
+        self.varNames  = []
+        self.varTypes  = []
+        self.Data      = {}
+        self.nLines    = 0
+        self.sliceElem = {}
+        self.hasNAME   = False
 
-    hasNAME   = None
+        if fileName is not None:
+            self.readFile()
 
-    def __init__(self, fileName):
+        return
 
-        self.fileName = fileName
-        self.metaData = {}
-        self.varNames = []
-        self.varTypes = []
-        self.Data     = {}
+    def clearData(self):
+        """Clear the data arrays.
+        """
+        self.metaData  = {}
+        self.varNames  = []
+        self.varTypes  = []
+        self.Data      = {}
+        self.nLines    = 0
+        self.sliceElem = {}
+        self.hasNAME   = False
 
-        self.nLines   = 0
-        self.hasNAME  = None
+        return
 
-        # Read File
-        with open(fileName, "r") as tfsFile:
+    def readFile(self, fileName=None):
+        """Parse a file and save the data in the data arrays. If a file
+        name is not specified, the one specified in the contructor will
+        be used instead.
+        """
+        if fileName is not None:
+            self.fileName = fileName
 
+        self.clearData()
+        with open(self.fileName, "r") as tfsFile:
             for tfsLine in tfsFile:
-
                 # Metadata
                 if tfsLine[0] == "@":
-                    spLines = tfsLine.split()[1:]
-                    if spLines[1][-1] == "d":
+                    spLines = tfsLine.lstrip().split(None, maxsplit=3)[1:]
+                    if spLines[1].endswith("d"):
                         self.metaData[spLines[0]] = int(spLines[2])
-                    elif spLines[1][-1] == "e":
+                    elif spLines[1].endswith("le"):
                         self.metaData[spLines[0]] = float(spLines[2])
-                    elif spLines[1][-1] == "s":
-                        self.metaData[spLines[0]] = self._stripQuotes(spLines[2])
+                    elif spLines[1].endswith("s"):
+                        self.metaData[spLines[0]] = self._stripQuotes(spLines[2].strip())
                     else:
-                        logger.error(
+                        logger.warning(
                             "Unknown type '%s' for metadata variable '%s'" % (
-                                spLines[1], spLines[2]
+                                spLines[1], spLines[2].strip()
                             )
                         )
-                        return False
 
                 # Header/Variable Names
                 elif tfsLine[0] == "*":
@@ -90,7 +102,9 @@ class TableFS:
                 # Data
                 else:
                     spLines = tfsLine.split()
-                    assert len(spLines) == len(self.varNames)
+                    if len(spLines) != len(self.varNames):
+                        raise IndexError("Mismatch between data lines and variable names")
+
                     for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
                         self.Data[vN].append(spLine)
                         if vT == "%s":
@@ -99,14 +113,17 @@ class TableFS:
 
             logger.info("%d lines of data read" % self.nLines)
 
-        if "NAME" in self.Data.keys():
+        if "NAME" in self.Data:
             dataLines = len(self.Data["NAME"])
-            self.hasNAME = False
+            self.hasNAME = True
         else:
             dataLines = len(self.Data[next(iter(self.Data.keys()), None)])
-            self.hasNAME = True
+            self.hasNAME = False
 
-        assert self.nLines == dataLines
+        if self.nLines != dataLines:
+            logger.warning("Mismatch between lines read (%d) and lines stored (%d)" % (
+                self.nLines, dataLines
+            ))
 
         return
 
@@ -118,66 +135,16 @@ class TableFS:
             vN = self.varNames[i]
             vT = self.varTypes[i]
 
-            if vT[-1] == "d":
+            if vT.endswith("d"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="int")
-            elif vT[-1] == "e":
+            elif vT.endswith("le"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="float")
-            elif vT[-1] == "s":
+            elif vT.endswith("s"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="str")
             else:
                 logger.error("Unknown type '%s' for variable '%s'" % (vT, vN))
-                return False
 
-        return True
-
-    def slicedRebuild(self, maxSearch=None):
-        """Rebuild sliced elements
-        """
-        if not self.hasNAME:
-            raise TypeError("This TFS table is not indexed by NAME")
-
-        logger.info("Rebuilding sliced elements.")
-
-        self.sliceElem = {}
-
-        for i in range(self.nLines):
-
-            # Look for sliced element
-
-            name1 = self.Data["NAME"][i]
-            ns1   = name1.split("..")
-
-            if len(ns1) == 2:
-                if not ns1[0] in self.elements:
-                    idx = int(ns1[1])
-                    if idx != 1:
-                        logger.warn((
-                            "Starting in the middle of a sliced element\t "
-                            "Element name = '%s'\t "
-                            "First idx = %d"
-                        ) % (
-                            ns1[0], idx
-                        ))
-
-                    sMin = float(self.Data["S"][i])
-                    sMax = float(self.Data["S"][i])
-                    maxJ = self.nLines
-
-                    if maxSearch is not None:
-                        maxJ = min(self.nLines, i + 1 + maxSearch)
-
-                    for j in range(i+1, maxJ):
-                        name2 = self.Data["NAME"][j]
-                        ns2 = name2.split("..")
-                        if len(ns2) == 2:
-                            if ns2[0] == ns1[0]:
-                                idx += 1
-                                assert idx == int(ns2[1])
-                                sMax = float(self.Data["S"][j])
-
-                    self.sliceElem[ns1[0]] = (sMin, sMax)
-
-        return True
+        return
 
     def shiftSeq(self, newFirst):
         """Shift the sequence such that the element newFirst is the
@@ -186,15 +153,18 @@ class TableFS:
         if not self.hasNAME:
             raise TypeError("This TFS table is not indexed by NAME")
 
+        if not isinstance(self.Data["S"][0], float):
+            raise ValueError("S column is not a number. Please run convertToNumpy().")
+
         # Find the index of the first element:
         idx = -1
         for (i, name) in zip(range(self.nLines), self.Data["NAME"]):
             if name == newFirst:
                 idx = i
                 break
+
         if idx == -1:
-            logger.warn("No element named '%s' found" % newFirst)
-            return False
+            raise KeyError("No element named '%s' found" % newFirst)
 
         # Shift all the data arrays
         for d in self.Data:
@@ -215,7 +185,7 @@ class TableFS:
         # Kill elements array which is no longer valid
         self.sliceElem = None
 
-        return True
+        return
 
     def findDataIndex(self, columnName, searchPattern):
         """Search a data column for a specific pattern
