@@ -35,10 +35,8 @@ def testTFS_FileError(monkeypatch, caplog, filesDir):
     testFile = os.path.join(filesDir, "fodothin_90.tfs")
     with monkeypatch.context() as mp:
         mp.setattr("builtins.open", causeOSError)
-        tfsObj = TableFS(testFile)
-        assert tfsObj.fileName == testFile
-        assert tfsObj.Data == {}
-        assert "ERROR" in caplog.text
+        with pytest.raises(OSError):
+            _ = TableFS(testFile)
 
 # END Test testTFS_FileError
 
@@ -93,7 +91,7 @@ def testTFS_LatticeFile(caplog, filesDir):
     # Numpy Conversion
     # ================
 
-    assert tfsObj.convertToNumpy()
+    tfsObj.convertToNumpy()
     assert isinstance(tfsObj.Data["NAME"][0], str)
     assert isinstance(tfsObj.Data["KEYWORD"][0], str)
     assert isinstance(tfsObj.Data["S"][0], float)
@@ -145,7 +143,7 @@ def testTFS_TrackFile(caplog, filesDir):
     # Numpy Conversion
     # ================
 
-    assert tfsObj.convertToNumpy()
+    tfsObj.convertToNumpy()
     assert isinstance(tfsObj.Data["NUMBER"][0], numpy.int64)
     assert isinstance(tfsObj.Data["TURN"][0], numpy.int64)
     assert isinstance(tfsObj.Data["X"][0], float)
@@ -183,7 +181,7 @@ def testTFS_LatticeSearch(caplog, filesDir):
 # END Test testTFS_LatticeSearch
 
 @pytest.mark.tfs
-def testTFS_ShiftSequence(caplog, filesDir):
+def testTFS_ShiftSequence(filesDir):
     """Rotate the elements in the lattice
     """
     # This file can not be shifted
@@ -202,17 +200,18 @@ def testTFS_ShiftSequence(caplog, filesDir):
     # S column data type
     with pytest.raises(ValueError):
         assert tfsObj.shiftSeq("DRIFT_0")
-    assert tfsObj.convertToNumpy()
+    tfsObj.convertToNumpy()
 
     # Invalid name
-    assert not tfsObj.shiftSeq("STUFF")
+    with pytest.raises(KeyError):
+        tfsObj.shiftSeq("STUFF")
     assert list(tfsObj.Data["NAME"]) == [
         "FODOTHIN$START", "Q1F", "DRIFT_0", "Q2D", "DRIFT_1", "Q3F", "FODOTHIN$END"
     ]
     assert list(tfsObj.Data["S"]) == [0.0, 0.0, 53.45, 53.45, 106.9, 106.9, 106.9]
 
     # Valid shift
-    assert tfsObj.shiftSeq("Q2D")
+    tfsObj.shiftSeq("Q2D")
     assert list(tfsObj.Data["NAME"]) == [
         "Q2D", "DRIFT_1", "Q3F", "FODOTHIN$END", "FODOTHIN$START", "Q1F", "DRIFT_0"
     ]

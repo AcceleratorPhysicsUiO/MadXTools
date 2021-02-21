@@ -68,58 +68,51 @@ class TableFS:
             self.fileName = fileName
 
         self.clearData()
-        try:
-            with open(self.fileName, "r") as tfsFile:
-
-                for tfsLine in tfsFile:
-                    # Metadata
-                    if tfsLine[0] == "@":
-                        spLines = tfsLine.lstrip().split(None, maxsplit=3)[1:]
-                        if spLines[1].endswith("d"):
-                            self.metaData[spLines[0]] = int(spLines[2])
-                        elif spLines[1].endswith("le"):
-                            self.metaData[spLines[0]] = float(spLines[2])
-                        elif spLines[1].endswith("s"):
-                            self.metaData[spLines[0]] = self._stripQuotes(spLines[2].strip())
-                        else:
-                            logger.warning(
-                                "Unknown type '%s' for metadata variable '%s'" % (
-                                    spLines[1], spLines[2].strip()
-                                )
-                            )
-
-                    # Header/Variable Names
-                    elif tfsLine[0] == "*":
-                        spLines = tfsLine.split()[1:]
-                        for spLine in spLines:
-                            self.varNames.append(spLine)
-                            self.Data[spLine] = []
-
-                    # Header/Variable Type
-                    elif tfsLine[0] == "$":
-                        spLines = tfsLine.split()[1:]
-                        for spLine in spLines:
-                            self.varTypes.append(spLine)
-
-                    # Data
+        with open(self.fileName, "r") as tfsFile:
+            for tfsLine in tfsFile:
+                # Metadata
+                if tfsLine[0] == "@":
+                    spLines = tfsLine.lstrip().split(None, maxsplit=3)[1:]
+                    if spLines[1].endswith("d"):
+                        self.metaData[spLines[0]] = int(spLines[2])
+                    elif spLines[1].endswith("le"):
+                        self.metaData[spLines[0]] = float(spLines[2])
+                    elif spLines[1].endswith("s"):
+                        self.metaData[spLines[0]] = self._stripQuotes(spLines[2].strip())
                     else:
-                        spLines = tfsLine.split()
-                        if len(spLines) != len(self.varNames):
-                            logger.error("Mismatch between data lines and varaible names")
-                            return False
+                        logger.warning(
+                            "Unknown type '%s' for metadata variable '%s'" % (
+                                spLines[1], spLines[2].strip()
+                            )
+                        )
 
-                        for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
-                            self.Data[vN].append(spLine)
-                            if vT == "%s":
-                                self.Data[vN][-1] = self._stripQuotes(self.Data[vN][-1])
-                        self.nLines += 1
+                # Header/Variable Names
+                elif tfsLine[0] == "*":
+                    spLines = tfsLine.split()[1:]
+                    for spLine in spLines:
+                        self.varNames.append(spLine)
+                        self.Data[spLine] = []
 
-                logger.info("%d lines of data read" % self.nLines)
+                # Header/Variable Type
+                elif tfsLine[0] == "$":
+                    spLines = tfsLine.split()[1:]
+                    for spLine in spLines:
+                        self.varTypes.append(spLine)
 
-        except Exception as e:
-            logger.error("Could not read file %s" % self.fileName)
-            logger.error(str(e))
-            return False
+                # Data
+                else:
+                    spLines = tfsLine.split()
+                    if len(spLines) != len(self.varNames):
+                        logger.error("Mismatch between data lines and varaible names")
+                        return False
+
+                    for (spLine, vN, vT) in zip(spLines, self.varNames, self.varTypes):
+                        self.Data[vN].append(spLine)
+                        if vT == "%s":
+                            self.Data[vN][-1] = self._stripQuotes(self.Data[vN][-1])
+                    self.nLines += 1
+
+            logger.info("%d lines of data read" % self.nLines)
 
         if "NAME" in self.Data:
             dataLines = len(self.Data["NAME"])
@@ -151,9 +144,8 @@ class TableFS:
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="str")
             else:
                 logger.error("Unknown type '%s' for variable '%s'" % (vT, vN))
-                return False
 
-        return True
+        return
 
     def shiftSeq(self, newFirst):
         """Shift the sequence such that the element newFirst is the
@@ -171,9 +163,9 @@ class TableFS:
             if name == newFirst:
                 idx = i
                 break
+
         if idx == -1:
-            logger.warn("No element named '%s' found" % newFirst)
-            return False
+            raise KeyError("No element named '%s' found" % newFirst)
 
         # Shift all the data arrays
         for d in self.Data:
@@ -194,7 +186,7 @@ class TableFS:
         # Kill elements array which is no longer valid
         self.sliceElem = None
 
-        return True
+        return
 
     def findDataIndex(self, columnName, searchPattern):
         """Search a data column for a specific pattern
