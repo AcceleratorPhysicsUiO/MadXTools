@@ -53,9 +53,9 @@ def _initLogging(logObj):
         logLevel = logging.INFO
 
     if logLevel < logging.INFO:
-        logFormat = "[{asctime:s}] {levelname:8s} {message:}"
+        logFormat = "[{asctime:s}] {levelname:8s}  {message:}"
     else:
-        logFormat = "{levelname:8s} {message:}"
+        logFormat = "{levelname:8s}  {message:}"
 
     logFmt = logging.Formatter(fmt=logFormat, style="{")
 

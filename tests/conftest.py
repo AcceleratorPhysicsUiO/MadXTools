@@ -4,7 +4,7 @@ MadXTools : Test Suite Configuration
 ====================================
 
 This file is a part of MadXTools
-Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, Univesity of Oslo
+Copyright 2017–2021 K.N. Sjobak, V. Berglyd Olsen, University of Oslo
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
