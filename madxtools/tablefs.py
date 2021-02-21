@@ -155,58 +155,6 @@ class TableFS:
 
         return True
 
-    def slicedRebuild(self, maxSearch=None):
-        """Rebuild sliced elements
-        """
-        if not self.hasNAME:
-            raise TypeError("This TFS table is not indexed by NAME")
-
-        logger.info("Rebuilding sliced elements.")
-
-        self.sliceElem = {}
-
-        for i in range(self.nLines):
-
-            # Look for sliced element
-
-            name1 = self.Data["NAME"][i]
-            ns1   = name1.split("..")
-
-            if len(ns1) == 2:
-                if not ns1[0] in self.elements:
-                    idx = int(ns1[1])
-                    if idx != 1:
-                        logger.warning((
-                            "Starting in the middle of a sliced element\t "
-                            "Element name = '%s'\t "
-                            "First idx = %d"
-                        ) % (
-                            ns1[0], idx
-                        )
-                    )
-
-                    sMin = float(self.Data["S"][i])
-                    sMax = float(self.Data["S"][i])
-                    maxJ = self.nLines
-
-                    if maxSearch is not None:
-                        maxJ = min(self.nLines, i + 1 + maxSearch)
-
-                    for j in range(i+1, maxJ):
-                        name2 = self.Data["NAME"][j]
-                        ns2 = name2.split("..")
-                        if len(ns2) == 2:
-                            if ns2[0] == ns1[0]:
-                                idx += 1
-                                if idx != int(ns2[1]):
-                                    logger.error("Index mismatch %d != %d" % (idx, int(ns2[1])))
-                                    return False
-                                sMax = float(self.Data["S"][j])
-
-                    self.sliceElem[ns1[0]] = (sMin, sMax)
-
-        return True
-
     def shiftSeq(self, newFirst):
         """Shift the sequence such that the element newFirst is the
         first in the sequence.
