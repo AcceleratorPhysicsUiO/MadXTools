@@ -143,11 +143,11 @@ class TableFS:
             vN = self.varNames[i]
             vT = self.varTypes[i]
 
-            if vT[-1] == "d":
+            if vT.endswith("d"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="int")
-            elif vT[-1] == "e":
+            elif vT.endswith("le"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="float")
-            elif vT[-1] == "s":
+            elif vT.endswith("s"):
                 self.Data[vN] = np.asarray(self.Data[vN], dtype="str")
             else:
                 logger.error("Unknown type '%s' for variable '%s'" % (vT, vN))
@@ -176,7 +176,7 @@ class TableFS:
                 if not ns1[0] in self.elements:
                     idx = int(ns1[1])
                     if idx != 1:
-                        logger.warn((
+                        logger.warning((
                             "Starting in the middle of a sliced element\t "
                             "Element name = '%s'\t "
                             "First idx = %d"
@@ -198,7 +198,9 @@ class TableFS:
                         if len(ns2) == 2:
                             if ns2[0] == ns1[0]:
                                 idx += 1
-                                assert idx == int(ns2[1])
+                                if idx != int(ns2[1]):
+                                    logger.error("Index mismatch %d != %d" % (idx, int(ns2[1])))
+                                    return False
                                 sMax = float(self.Data["S"][j])
 
                     self.sliceElem[ns1[0]] = (sMin, sMax)

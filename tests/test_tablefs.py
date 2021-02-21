@@ -22,6 +22,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import pytest
+import numpy
 
 from dummy import causeOSError
 
@@ -68,5 +69,91 @@ def testTFS_LatticeFile(caplog, filesDir):
         "TITLE": "no-title",
         "TYPE": "TWISS"
     }
+    assert tfsObj.varNames == [
+        "NAME", "KEYWORD", "S", "L", "BETX", "ALFX", "MUX", "BETY", "ALFY", "MUY"
+    ]
+    assert tfsObj.varTypes == [
+        "%s", "%s", "%le", "%le", "%le", "%le", "%le", "%le", "%le", "%le"
+    ]
+    assert tfsObj.nLines == 7
+
+    # Data Types
+    assert isinstance(tfsObj.Data["NAME"][0], str)
+    assert isinstance(tfsObj.Data["KEYWORD"][0], str)
+    assert isinstance(tfsObj.Data["S"][0], str)
+    assert isinstance(tfsObj.Data["L"][0], str)
+    assert isinstance(tfsObj.Data["BETX"][0], str)
+    assert isinstance(tfsObj.Data["ALFX"][0], str)
+    assert isinstance(tfsObj.Data["MUX"][0], str)
+    assert isinstance(tfsObj.Data["BETY"][0], str)
+    assert isinstance(tfsObj.Data["ALFY"][0], str)
+    assert isinstance(tfsObj.Data["MUY"][0], str)
+
+    # Numpy Conversion
+    # ================
+
+    assert tfsObj.convertToNumpy()
+    assert isinstance(tfsObj.Data["NAME"][0], str)
+    assert isinstance(tfsObj.Data["KEYWORD"][0], str)
+    assert isinstance(tfsObj.Data["S"][0], numpy.float)
+    assert isinstance(tfsObj.Data["L"][0], numpy.float)
+    assert isinstance(tfsObj.Data["BETX"][0], numpy.float)
+    assert isinstance(tfsObj.Data["ALFX"][0], numpy.float)
+    assert isinstance(tfsObj.Data["MUX"][0], numpy.float)
+    assert isinstance(tfsObj.Data["BETY"][0], numpy.float)
+    assert isinstance(tfsObj.Data["ALFY"][0], numpy.float)
+    assert isinstance(tfsObj.Data["MUY"][0], numpy.float)
 
 # END Test testTFS_LatticeFile
+
+@pytest.mark.tfs
+def testTFS_TrackFile(caplog, filesDir):
+    """Check the reading of a track files.
+    """
+    testFile = os.path.join(filesDir, "fodothintrack_90.tfs.obs0001.p0001")
+
+    tfsObj = TableFS()
+    assert tfsObj.fileName is None
+
+    assert tfsObj.readFile(testFile)
+    assert tfsObj.fileName == testFile
+    assert tfsObj.metaData == {
+        "DATE": "20/02/21",
+        "NAME": "TRACK.OBS0001.P0001",
+        "ORIGIN": "5.06.01 Linux 64",
+        "TIME": "23.40.21",
+        "TITLE": "no-title",
+        "TYPE": "TRACKOBS"
+    }
+    assert tfsObj.varNames == ["NUMBER", "TURN", "X", "PX", "Y", "PY", "T", "PT", "S", "E"]
+    assert tfsObj.varTypes == ["%d", "%d", "%le", "%le", "%le", "%le", "%le", "%le", "%le", "%le"]
+    assert tfsObj.nLines == 9
+
+    # Data Types
+    assert isinstance(tfsObj.Data["NUMBER"][0], str)
+    assert isinstance(tfsObj.Data["TURN"][0], str)
+    assert isinstance(tfsObj.Data["X"][0], str)
+    assert isinstance(tfsObj.Data["PX"][0], str)
+    assert isinstance(tfsObj.Data["Y"][0], str)
+    assert isinstance(tfsObj.Data["PY"][0], str)
+    assert isinstance(tfsObj.Data["T"][0], str)
+    assert isinstance(tfsObj.Data["PT"][0], str)
+    assert isinstance(tfsObj.Data["S"][0], str)
+    assert isinstance(tfsObj.Data["E"][0], str)
+
+    # Numpy Conversion
+    # ================
+
+    assert tfsObj.convertToNumpy()
+    assert isinstance(tfsObj.Data["NUMBER"][0], numpy.int64)
+    assert isinstance(tfsObj.Data["TURN"][0], numpy.int64)
+    assert isinstance(tfsObj.Data["X"][0], numpy.float)
+    assert isinstance(tfsObj.Data["PX"][0], numpy.float)
+    assert isinstance(tfsObj.Data["Y"][0], numpy.float)
+    assert isinstance(tfsObj.Data["PY"][0], numpy.float)
+    assert isinstance(tfsObj.Data["T"][0], numpy.float)
+    assert isinstance(tfsObj.Data["PT"][0], numpy.float)
+    assert isinstance(tfsObj.Data["S"][0], numpy.float)
+    assert isinstance(tfsObj.Data["E"][0], numpy.float)
+
+# END Test testTFS_TrackFile
