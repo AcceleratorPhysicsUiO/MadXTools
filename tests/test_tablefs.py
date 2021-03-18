@@ -158,6 +158,26 @@ def testTFS_TrackFile(filesDir):
 # END Test testTFS_TrackFile
 
 @pytest.mark.tfs
+def testTFS_TrackFile2(filesDir):
+    """Check the reading of particles.one files.
+    """
+
+    testFile = os.path.join(filesDir, "particles.one")
+
+    tfsObj = TableFS()
+    assert tfsObj.fileName is None
+
+    tfsObj.readFile(testFile)
+
+    assert tfsObj.varNames == ['NUMBER', 'TURN', 'X', 'PX', 'Y', 'PY', 'T', 'PT', 'S', 'E']
+
+    assert len(tfsObj.Data["NUMBER"]) == 30
+    assert tfsObj.nLines == 30
+
+    tfsObj.convertToNumpy()
+
+
+@pytest.mark.tfs
 def testTFS_LatticeSearch(filesDir):
     """Check searching a lattice files.
     """
@@ -217,4 +237,4 @@ def testTFS_ShiftSequence(filesDir):
     ]
     assert list(tfsObj.Data["S"]) == [0.0, 53.45, 53.45, 53.45, 53.45, 53.45, 106.9]
 
-# END Test testTFS_LatticeSearch
+# END Test testTFS_ShiftSequence

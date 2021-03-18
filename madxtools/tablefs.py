@@ -99,6 +99,10 @@ class TableFS:
                     for spLine in spLines:
                         self.varTypes.append(spLine)
 
+                # Comment
+                elif tfsLine.strip()[0] == "#":
+                    pass
+
                 # Data
                 else:
                     spLines = tfsLine.split()
