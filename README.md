@@ -35,6 +35,19 @@ tfsObj.convertToNumpy()
 # ... your code
 ```
 
+## Installation
+
+MadXTools can be installed automatically using `pip`.
+
+If you are using Anaconda Python or similar, it can be installed using the command:
+
+```pip3 install git+https://github.com/AcceleratorPhysicsUiO/MadXTools```
+
+For “system” python, for example if you are running the standard Python that comes with
+a Linux machine, it can be installed into your user home directory using the command:
+
+```pip3 install --user git+https://github.com/AcceleratorPhysicsUiO/MadXTools```
+
 ## Test Suite
 
 Requires python package `pytest`, and optionally, `pytest-cov`.
