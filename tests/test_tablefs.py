@@ -172,7 +172,7 @@ def testTFS_TrackFile2(filesDir):
     assert tfsObj.varNames == ['NUMBER', 'TURN', 'X', 'PX', 'Y', 'PY', 'T', 'PT', 'S', 'E']
 
     assert len(tfsObj.Data["NUMBER"]) == 30
-    assert tfsObj.nLines == 30;
+    assert tfsObj.nLines == 30
 
     tfsObj.convertToNumpy()
 
