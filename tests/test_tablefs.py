@@ -162,7 +162,7 @@ def testTFS_TrackFile2(filesDir):
     """Check the reading of particles.one files.
     """
 
-    testFile = os.path.join(filesDir,"particles.one")
+    testFile = os.path.join(filesDir, "particles.one")
 
     tfsObj = TableFS()
     assert tfsObj.fileName is None
